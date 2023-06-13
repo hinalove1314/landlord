@@ -57,6 +57,7 @@ public class GameManager : IManager
     {
         m_MenuManager.Update();
         m_UIManager.Update();
+        m_NetManager.Update();
     }
 
     public void Destroy()

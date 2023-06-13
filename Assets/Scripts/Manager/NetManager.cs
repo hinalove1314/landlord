@@ -14,6 +14,9 @@ public class NetManager : MonoBehaviour
     public TcpClient client;
     public NetworkStream stream;
     private LoginData response;
+    private LoginData data;
+    private int isLoadMatchScene = 0;
+
     private ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
 
     private MenuManager m_MenuManager;
@@ -52,12 +55,17 @@ public class NetManager : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    public void Update()
     {
         string message;
         while (messages.TryDequeue(out message))
         {
             Debug.Log("Received Message: " + message);
+        }
+
+        if (isLoadMatchScene ==1)
+        {
+            m_MenuManager.LoadMatchScene(data.isLogin);
         }
     }
 
@@ -71,12 +79,28 @@ public class NetManager : MonoBehaviour
         }
     }
 
-    public void sendMsg(string msg)
+/*    public void sendMsg(string msg)
     {
         //向服务器发送消息
         byte[] data = Encoding.ASCII.GetBytes(msg);
         NetworkStream stream = client.GetStream();
         stream.Write(data, 0, data.Length);
+    }*/
+
+    public void sendMsg(int dataLength,int netcode)
+    {
+        Debug.Log($"Start sendMsg!dataLength = {dataLength} netcode = {netcode}");
+        byte[] lengthBytes = BitConverter.GetBytes(dataLength);
+        byte[] netcodeBytes = BitConverter.GetBytes(netcode);
+
+        byte[] message = new byte[dataLength];
+        Array.Copy(lengthBytes, 0, message, 0, dataLength);
+        Array.Copy(netcodeBytes, 0, message, dataLength, 4);
+
+/*        Array.Copy(lengthBytes, 0, message, 0, 4);
+        Array.Copy(netcodeBytes, 0, message, 4, 4);*/
+
+        stream.Write(message, 0, message.Length);
     }
 
     void ReceiveMessage()
@@ -101,18 +125,14 @@ public class NetManager : MonoBehaviour
                 Debug.Log($"Data Size: {dataSize}, NetCode: {netcode}, JSON: {jsonData}");
 
                 Debug.Log("json_data=" + jsonData);
-                LoginData data = JsonUtility.FromJson<LoginData>(jsonData);
+                data = JsonUtility.FromJson<LoginData>(jsonData);
                 Debug.Log("isLogin=" + data.m_isRegisted);
                 Debug.Log("isLogin=" + data.m_isLogin);
-                int temp = 0;
+                
                 switch (netcode)
                 {
                     case NetCode.RSP_CREAT:
-                        if (temp == 0)
-                        {
-                            m_MenuManager.LoadMatchScene(data.isLogin);
-                        }
-                        temp++;
+                        isLoadMatchScene = 1;//修改变量值为1开始跳转场景
                         //Debug.Log("isLogin="+ response.isLogin);
                         break;
                 }

@@ -28,7 +28,7 @@ public class UIManager : IManager
     //∆•≈‰≥°æ∞
     private Button m_MatchButton;
     private RectTransform m_MatchPanel;
-
+    private Button m_CancelButton;
 
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
@@ -114,6 +114,7 @@ public class UIManager : IManager
             m_RegisterPanelButton.onClick.AddListener(OnRegisterPanelButton);
         }
 
+        //∆•≈‰≥°æ∞
         Scene MatchScene = SceneManager.GetSceneByName("Match");
         if (MatchScene.buildIndex == 1)
         {
@@ -130,9 +131,14 @@ public class UIManager : IManager
                     {
                         m_MatchPanel = child.gameObject.GetComponent<RectTransform>();
                     }
+                    else if(child.gameObject.name == "CancelButton")
+                    {
+                        m_CancelButton= child.gameObject.GetComponent<Button>();
+                    }
                 }
             }
             m_MatchButton.onClick.AddListener(OnMatchButton);
+            m_CancelButton.onClick.AddListener(OnCancelButton);
         }
 
         //’Ω∂∑≥°æ∞
@@ -224,7 +230,14 @@ public class UIManager : IManager
     public void OnMatchButton()
     {
         m_MatchPanel.gameObject.SetActive(true);
+        m_NetManager.sendMsg(4, 13);
     }
+
+    public void OnCancelButton()
+    {
+        m_MatchPanel.gameObject.SetActive(false);
+    }
+
 
     public void OnRegisterPanelButton()
     {
