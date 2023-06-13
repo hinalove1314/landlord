@@ -20,6 +20,8 @@ public class MenuManager : IManager
     private MenuManager m_MenuManager;
     private GameManager m_GameManager;
     private NetManager m_NetManager;
+
+    private bool isSceneLoading = false;//确保只加载一次场景
     public void Init(params object[] managers)
     {
         m_UIManager = managers[0] as UIManager;
@@ -91,6 +93,26 @@ public class MenuManager : IManager
     {
 
     }
+
+    public void LoadMatchScene(int judge)
+    {
+        if (judge == 1 && !isSceneLoading)
+        {
+            isSceneLoading = true;
+            Debug.Log("LoadMatchScene");
+            AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Match");
+            asyncLoad.completed += (AsyncOperation op) => {
+                Debug.Log("Match Scene loaded");
+                m_UIManager.Init(GameManager.Instance.m_MenuManager);
+                isSceneLoading = false;
+            };
+        }
+        else
+        {
+            Debug.Log("judge=0 or scene is already loading");
+        }
+    }
+
 
     public void LoadMenu(string response)
     {

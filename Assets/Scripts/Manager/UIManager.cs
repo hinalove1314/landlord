@@ -23,7 +23,12 @@ public class UIManager : IManager
     private Button m_StartGameCloseButton;
     private RectTransform m_RegisterPanel;
     private RectTransform m_StartGamePanel;
-    
+
+
+    //∆•≈‰≥°æ∞
+    private Button m_MatchButton;
+    private RectTransform m_MatchPanel;
+
 
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
@@ -109,9 +114,30 @@ public class UIManager : IManager
             m_RegisterPanelButton.onClick.AddListener(OnRegisterPanelButton);
         }
 
+        Scene MatchScene = SceneManager.GetSceneByName("Match");
+        if (MatchScene.buildIndex == 1)
+        {
+            foreach (GameObject rootObject in MatchScene.GetRootGameObjects())
+            {
+                Transform[] allChildren = rootObject.GetComponentsInChildren<Transform>(true);
+                foreach (Transform child in allChildren)
+                {
+                    if (child.gameObject.name == "MatchButton")
+                    {
+                        m_MatchButton = child.gameObject.GetComponent<Button>();
+                    }
+                    else if(child.gameObject.name == "MatchPanel")
+                    {
+                        m_MatchPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
+                }
+            }
+            m_MatchButton.onClick.AddListener(OnMatchButton);
+        }
+
         //’Ω∂∑≥°æ∞
         Scene GameScene = SceneManager.GetSceneByName("Game");
-        if (GameScene.buildIndex == 1)
+        if (GameScene.buildIndex == 2)
         {
             foreach (GameObject rootObject in GameScene.GetRootGameObjects())
             {
@@ -192,6 +218,14 @@ public class UIManager : IManager
         m_RegisterPanel.gameObject.SetActive(false);
         m_PromptText.text = "";
     }
+
+    //∆•≈‰≥°æ∞
+
+    public void OnMatchButton()
+    {
+        m_MatchPanel.gameObject.SetActive(true);
+    }
+
     public void OnRegisterPanelButton()
     {
         if (string.IsNullOrEmpty(m_UsernameInputField.text))

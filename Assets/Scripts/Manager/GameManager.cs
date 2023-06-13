@@ -43,14 +43,13 @@ public class GameManager : IManager
         Init(null);
 
         m_NetManager.connectToServer("127.0.0.1", 8888);
-        
     }
 
     public void Init(params object[] managers)
     {
         m_MenuManager.Init(m_UIManager,m_NetManager);
         m_UIManager.Init(m_MenuManager,m_NetManager);
-        m_NetManager.Init();
+        m_NetManager.Init(m_MenuManager);
     }
 
     // Update is called once per frame

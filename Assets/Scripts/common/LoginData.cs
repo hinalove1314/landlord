@@ -2,25 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LoginData : MonoBehaviour
+public class LoginData
 {
     [SerializeField]
-    private int m_isRegisted;//1表示注册成功，0表示注册失败
+    public int m_isRegisted;//1表示注册成功，0表示注册失败
     [SerializeField]
-    private int m_isLogin;//1表示登录成功，0表示登录失败
+    public int m_isLogin;//1表示登录成功，0表示登录失败
     [SerializeField]
-    private string m_dataAccount;
+    public string m_dataAccount;
     [SerializeField]
-    private string m_dataPassword;
+    public string m_dataPassword;
 
     public int isRegisted
     {
-        get { return isRegisted; }
-        set { isRegisted = value; }
+        get { return m_isRegisted; }
+        set { m_isRegisted = value; }
     }
     public int isLogin
     {
-        get { return isLogin; }
+        get { return m_isLogin; }
         set { m_isLogin = value; }
     }
 

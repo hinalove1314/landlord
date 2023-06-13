@@ -4,13 +4,19 @@ using UnityEngine;
 using System.Net.Sockets;
 using System.Text;
 using System;
+using System.Threading;
+using System.Collections.Concurrent;
+
 
 public class NetManager : MonoBehaviour
 {
+    private Thread thread;
     public TcpClient client;
     public NetworkStream stream;
     private LoginData response;
+    private ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
 
+    private MenuManager m_MenuManager;
     public void connectToServer(string serverIP, int port)
     {
         //连接服务器
@@ -19,12 +25,24 @@ public class NetManager : MonoBehaviour
 
         // Get a client stream for reading and writing.
         stream = client.GetStream();
-        StartCoroutine(ReadResponse());
+        if (BitConverter.IsLittleEndian)
+        {
+            Debug.Log("System uses Little-Endian");
+        }
+        else
+        {
+            Debug.Log("System uses Big-Endian");
+        }
+
+        Debug.Log("Stream initialized: " + (stream != null));
+
+        thread = new Thread(new ThreadStart(ReceiveMessage));
+        thread.Start();
     }
 
     public void Init(params object[] managers)
     {
-        //...
+        m_MenuManager = managers[0] as MenuManager;
     }
 
     // Start is called before the first frame update
@@ -36,7 +54,21 @@ public class NetManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        string message;
+        while (messages.TryDequeue(out message))
+        {
+            Debug.Log("Received Message: " + message);
+        }
+    }
+
+    public void OnDestroy()
+    {
+        thread.Abort();
+
+        if (client != null)
+        {
+            client.Close();
+        }
     }
 
     public void sendMsg(string msg)
@@ -47,45 +79,99 @@ public class NetManager : MonoBehaviour
         stream.Write(data, 0, data.Length);
     }
 
-    IEnumerator ReadResponse()
+    void ReceiveMessage()
+    {
+        Debug.Log("ReceiveMessage");
+        byte[] buffer = new byte[1024];
+ 
+
+        while (true)
+        {
+            int length = stream.Read(buffer, 0, buffer.Length);
+            if(length > 0)
+            {
+                byte[] dataBytes = new byte[4];
+                Array.Copy(buffer, 0, dataBytes, 0, 4);
+                int dataSize = BitConverter.ToInt32(dataBytes, 0);
+
+                int netcode = BitConverter.ToInt32(buffer, 4);
+                string jsonData = Encoding.UTF8.GetString(buffer, 8, dataSize);
+
+                messages.Enqueue($"Data Size: {dataSize}, NetCode: {netcode}, JSON: {jsonData}");
+                Debug.Log($"Data Size: {dataSize}, NetCode: {netcode}, JSON: {jsonData}");
+
+                Debug.Log("json_data=" + jsonData);
+                LoginData data = JsonUtility.FromJson<LoginData>(jsonData);
+                Debug.Log("isLogin=" + data.m_isRegisted);
+                Debug.Log("isLogin=" + data.m_isLogin);
+                int temp = 0;
+                switch (netcode)
+                {
+                    case NetCode.RSP_CREAT:
+                        if (temp == 0)
+                        {
+                            m_MenuManager.LoadMatchScene(data.isLogin);
+                        }
+                        temp++;
+                        //Debug.Log("isLogin="+ response.isLogin);
+                        break;
+                }
+            }
+        }
+    }
+
+
+    public void ReadResponse()
     {
         Debug.Log("readResponse");
-        // 确保数据可用
-        while (stream.DataAvailable)
-        {
-            yield return null;
+/*        while (true)
+        {*/
+            // 确保数据可用
+/*            while (!stream.DataAvailable)
+            {
+                yield return new WaitForSeconds(0.1f);  // wait for 100 milliseconds
+            }*/
+
+            if (stream == null)
+            {
+                Debug.Log("stream null");
+            }
+            else
+            {
+                Debug.Log("stream not null");
+            }
+
+            // 读取长度字段
+            byte[] lengthBytes = new byte[4];
+            stream.Read(lengthBytes, 0, 4);
+            int length = BitConverter.ToInt32(lengthBytes, 0);
+
+            // 读取netCode字段
+            byte[] netcodeBytes = new byte[4];
+            stream.Read(netcodeBytes, 0, 4);
+            int netcode = BitConverter.ToInt32(netcodeBytes, 0);
+
+/*            if (netcode != 2)
+            {
+                Debug.LogError("Unexpected netcode");
+                yield break;
+            }*/
+
+            // 读取JSON数据
+            byte[] jsonBytes = new byte[length];
+            stream.Read(jsonBytes, 0, length);
+            string json = Encoding.UTF8.GetString(jsonBytes);
+
+            switch (netcode)
+            {
+                case NetCode.RSP_CREAT:
+                    response = JsonUtility.FromJson<LoginData>(json);
+                    break;
+                    //..待添加
+            }
+            // 将JSON解析为LoginResponse对象
+            //LoginResponse response = JsonUtility.FromJson<LoginResponse>(json);
+            Debug.Log("IsLogin: " + response.isLogin);
         }
-
-        // 读取长度字段
-        byte[] lengthBytes = new byte[4];
-        stream.Read(lengthBytes, 0, 4);
-        int length = BitConverter.ToInt32(lengthBytes, 0);
-
-        // 读取netCode字段
-        byte[] netcodeBytes = new byte[4];
-        stream.Read(netcodeBytes, 0, 4);
-        int netcode = BitConverter.ToInt32(netcodeBytes, 0);
-
-        if (netcode != 2)
-        {
-            Debug.LogError("Unexpected netcode");
-            yield break;
-        }
-
-        // 读取JSON数据
-        byte[] jsonBytes = new byte[length];
-        stream.Read(jsonBytes, 0, length);
-        string json = Encoding.UTF8.GetString(jsonBytes);
-
-        switch (netcode)
-        {
-            case NetCode.RSP_CREAT:
-                response = JsonUtility.FromJson<LoginData>(json);
-                break;
-            //..待添加
-        }
-        // 将JSON解析为LoginResponse对象
-        //LoginResponse response = JsonUtility.FromJson<LoginResponse>(json);
-        Debug.Log("IsLogin: " + response.isLogin);
-    }
+    //}
 }
