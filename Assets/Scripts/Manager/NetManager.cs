@@ -93,7 +93,7 @@ public class NetManager : MonoBehaviour
         byte[] lengthBytes = BitConverter.GetBytes(dataLength);
         byte[] netcodeBytes = BitConverter.GetBytes(netcode);
 
-        byte[] message = new byte[dataLength];
+        byte[] message = new byte[dataLength+4];
         Array.Copy(lengthBytes, 0, message, 0, dataLength);
         Array.Copy(netcodeBytes, 0, message, dataLength, 4);
 

@@ -46,8 +46,8 @@ public class MenuManager : IManager
 
         string login_json = JsonUtility.ToJson(m_LoginData);
         byte[] jsonBytes = Encoding.UTF8.GetBytes(login_json);
-        int json_length = jsonBytes.Length;
-
+        //int json_length = jsonBytes.Length;
+        int data_length = jsonBytes.Length+4;
 
 
         /*        //创建一个值为1的变量
@@ -59,7 +59,8 @@ public class MenuManager : IManager
                 //NetworkStream stream = m_NetManager.client.GetStream();
                 m_NetManager.stream.Write(data, 0, data.Length);*/
         // Convert json_length to bytes
-        byte[] jsonLengthBytes = BitConverter.GetBytes(json_length);
+        //byte[] jsonLengthBytes = BitConverter.GetBytes(json_length);
+        byte[] jsonLengthBytes = BitConverter.GetBytes(data_length);
 
         //创建一个值为1的变量
         int netCode = 1;
