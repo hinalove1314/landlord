@@ -115,20 +115,22 @@ public class MenuManager : IManager
     }
 
 
-    public void LoadMenu(string response)
+    public void LoadGameScene()
     {
-        if(response == "isRegisted")
+        if (!isSceneLoading)
         {
-            Debug.Log("isRegisted");
-        }
-        else 
-        {
+            isSceneLoading = true;
+            Debug.Log("LoadGameScene");
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Game");
-            Debug.Log("notRegisted");
             asyncLoad.completed += (AsyncOperation op) => {
-                Debug.Log("Scene loaded");
+                Debug.Log("Game Scene loaded");
                 m_UIManager.Init(GameManager.Instance.m_MenuManager);
+                isSceneLoading = false;
             };
+        }
+        else
+        {
+            Debug.Log("scene is already loading");
         }
     }
 }

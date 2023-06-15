@@ -16,6 +16,7 @@ public class NetManager : MonoBehaviour
     private LoginData response;
     private LoginData data;
     private int isLoadMatchScene = 0;
+    private int isLoadGameScene = 0;
 
     private ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
 
@@ -66,6 +67,11 @@ public class NetManager : MonoBehaviour
         if (isLoadMatchScene ==1)
         {
             m_MenuManager.LoadMatchScene(data.isLogin);
+        }
+
+        if(isLoadGameScene == 1)
+        {
+            m_MenuManager.LoadGameScene();
         }
     }
 
@@ -133,8 +139,10 @@ public class NetManager : MonoBehaviour
                 {
                     case NetCode.RSP_CREAT:
                         isLoadMatchScene = 1;//修改变量值为1开始跳转场景
-                        //Debug.Log("isLogin="+ response.isLogin);
                         break;
+                    case NetCode.RSP_ROOM_LIST:
+                        isLoadGameScene = 1; 
+                        break;       
                 }
             }
         }
