@@ -7,7 +7,6 @@ using System;
 using System.Threading;
 using System.Collections.Concurrent;
 
-
 public class NetManager : MonoBehaviour
 {
     private Thread thread;
@@ -130,18 +129,25 @@ public class NetManager : MonoBehaviour
                 messages.Enqueue($"Data Size: {dataSize}, NetCode: {netcode}, JSON: {jsonData}");
                 Debug.Log($"Data Size: {dataSize}, NetCode: {netcode}, JSON: {jsonData}");
 
-                Debug.Log("json_data=" + jsonData);
+/*                Debug.Log("json_data=" + jsonData);
                 data = JsonUtility.FromJson<LoginData>(jsonData);
                 Debug.Log("isLogin=" + data.m_isRegisted);
-                Debug.Log("isLogin=" + data.m_isLogin);
+                Debug.Log("isLogin=" + data.m_isLogin);*/
                 
                 switch (netcode)
                 {
                     case NetCode.RSP_CREAT:
+                        Debug.Log("json_data=" + jsonData);
+                        data = JsonUtility.FromJson<LoginData>(jsonData);
+                        Debug.Log("isLogin=" + data.m_isLogin);
                         isLoadMatchScene = 1;//修改变量值为1开始跳转场景
                         break;
                     case NetCode.RSP_ROOM_LIST:
-                        isLoadGameScene = 1; 
+                        Debug.Log("case NetCode.RSP_ROOM_LIST");
+                        UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                        {
+                            m_MenuManager.LoadGameScene();
+                        });
                         break;       
                 }
             }

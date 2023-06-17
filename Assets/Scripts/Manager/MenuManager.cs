@@ -21,7 +21,8 @@ public class MenuManager : IManager
     private GameManager m_GameManager;
     private NetManager m_NetManager;
 
-    private bool isSceneLoading = false;//确保只加载一次场景
+    private bool isMatchSceneLoading = false;//确保只加载一次场景
+    private bool isGameSceneLoading = false;
     public void Init(params object[] managers)
     {
         m_UIManager = managers[0] as UIManager;
@@ -97,15 +98,15 @@ public class MenuManager : IManager
 
     public void LoadMatchScene(int judge)
     {
-        if (judge == 1 && !isSceneLoading)
+        if (judge == 1 && !isMatchSceneLoading)
         {
-            isSceneLoading = true;
+            isMatchSceneLoading = true;
             Debug.Log("LoadMatchScene");
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Match");
             asyncLoad.completed += (AsyncOperation op) => {
                 Debug.Log("Match Scene loaded");
                 m_UIManager.Init(GameManager.Instance.m_MenuManager);
-                isSceneLoading = false;
+                isMatchSceneLoading = false;
             };
         }
         else
@@ -115,22 +116,36 @@ public class MenuManager : IManager
     }
 
 
-    public void LoadGameScene()
+/*    public void LoadGameScene()
     {
-        if (!isSceneLoading)
+        Debug.Log("LoadGameScene");
+        if (!isGameSceneLoading)
         {
-            isSceneLoading = true;
+            isGameSceneLoading = true;
             Debug.Log("LoadGameScene");
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Game");
             asyncLoad.completed += (AsyncOperation op) => {
                 Debug.Log("Game Scene loaded");
                 m_UIManager.Init(GameManager.Instance.m_MenuManager);
-                isSceneLoading = false;
+                isGameSceneLoading = false;
             };
         }
         else
         {
             Debug.Log("scene is already loading");
         }
+    }*/
+
+    public void LoadGameScene()
+    {
+        Debug.Log("LoadGameScene");
+        isGameSceneLoading = true;
+        Debug.Log("LoadGameScene");
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Game");
+        asyncLoad.completed += (AsyncOperation op) => {
+            Debug.Log("Game Scene loaded");
+            m_UIManager.Init(GameManager.Instance.m_MenuManager);
+            isGameSceneLoading = false;
+        };
     }
 }

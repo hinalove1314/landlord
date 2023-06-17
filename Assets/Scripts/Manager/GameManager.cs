@@ -31,6 +31,8 @@ public class GameManager : IManager
         m_UIManager = new UIManager();
         m_MenuManager = new MenuManager();
         m_NetManager = new NetManager();
+
+        UnityMainThreadDispatcher.Instance.printInstance();
     }
 
 
