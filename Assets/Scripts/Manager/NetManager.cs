@@ -6,6 +6,7 @@ using System.Text;
 using System;
 using System.Threading;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 
 public class NetManager : MonoBehaviour
 {
@@ -111,7 +112,7 @@ public class NetManager : MonoBehaviour
     void ReceiveMessage()
     {
         Debug.Log("ReceiveMessage");
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
  
 
         while (true)
@@ -148,7 +149,19 @@ public class NetManager : MonoBehaviour
                         {
                             m_MenuManager.LoadGameScene();
                         });
-                        break;       
+                        break;
+                    case NetCode.RSP_DEAL_POKER:
+                        Debug.Log("NetCode.RSP_DEAL_POKER");
+                        jsonData = jsonData.Trim(); // 删除可能存在的多余空白字符
+                        string jsonToParse = "{\"cards\":" + jsonData + "}";
+                        Debug.Log("jsonToParse: " + jsonToParse); // 打印出完整的 JSON 字符串以便于调试
+                        CardsContainer container = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse);
+                        Card[] cards = container.cards;
+                        foreach (Card card in cards)
+                        {
+                            Debug.Log("Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                        }
+                        break;
                 }
             }
         }
