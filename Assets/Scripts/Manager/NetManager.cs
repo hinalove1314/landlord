@@ -18,6 +18,9 @@ public class NetManager : MonoBehaviour
     private int isLoadMatchScene = 0;
     private int isLoadGameScene = 0;
 
+    public RoomInfo roomInfo;
+    public PlayerInfo playerInfo;
+
     private ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
 
     private MenuManager m_MenuManager;
@@ -50,9 +53,13 @@ public class NetManager : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    public void Start()
     {
+        //初始化房间信息
+        roomInfo = new RoomInfo();
+        roomInfo.isCalled = false;//初始化没有叫地主
 
+        playerInfo = new PlayerInfo();
     }
 
     // Update is called once per frame
@@ -108,6 +115,23 @@ public class NetManager : MonoBehaviour
 
         stream.Write(message, 0, message.Length);
     }
+    public void SendMessageToServer(int netcode, object messageObject)
+    {
+        string messageJson = JsonUtility.ToJson(messageObject);
+
+        byte[] netcodeBytes = BitConverter.GetBytes(netcode);
+        byte[] messageBytes = Encoding.UTF8.GetBytes(messageJson);
+
+        int totalSize = netcodeBytes.Length + messageBytes.Length;
+        byte[] sizeBytes = BitConverter.GetBytes(totalSize);
+
+        byte[] dataToSend = new byte[sizeBytes.Length + netcodeBytes.Length + messageBytes.Length];
+        Buffer.BlockCopy(sizeBytes, 0, dataToSend, 0, sizeBytes.Length);
+        Buffer.BlockCopy(netcodeBytes, 0, dataToSend, sizeBytes.Length, netcodeBytes.Length);
+        Buffer.BlockCopy(messageBytes, 0, dataToSend, sizeBytes.Length + netcodeBytes.Length, messageBytes.Length);
+
+        stream.Write(dataToSend, 0, dataToSend.Length);
+    }
 
     void ReceiveMessage()
     {
@@ -145,10 +169,23 @@ public class NetManager : MonoBehaviour
                         break;
                     case NetCode.RSP_ROOM_LIST:
                         Debug.Log("case NetCode.RSP_ROOM_LIST");
+                        Debug.Log("Received room ID: " + jsonData[0]);
+                        if (int.TryParse(jsonData[0].ToString(), out int roomId))
+                        {
+                            roomInfo.RoomID = roomId;
+                        }
                         UnityMainThreadDispatcher.Instance.Enqueue(() =>
                         {
                             m_MenuManager.LoadGameScene();
                         });
+                        break;
+                    case NetCode.RSP_SEAT_NUM:
+                        Debug.Log("case NetCode.REQ_SEAT_NUM");
+                        Debug.Log("SeatNum = " + jsonData[0]);
+                        if (int.TryParse(jsonData[0].ToString(), out int seatnum))
+                        {
+                            playerInfo.SeatNum = seatnum;
+                        }
                         break;
                     case NetCode.RSP_DEAL_POKER:
                         Debug.Log("NetCode.RSP_DEAL_POKER");
@@ -159,7 +196,9 @@ public class NetManager : MonoBehaviour
                         Card[] cards = container.cards;
                         foreach (Card card in cards)
                         {
+                            
                             Debug.Log("Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                            UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.AddCard(card));
                         }
                         break;
                 }

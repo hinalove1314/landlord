@@ -17,8 +17,6 @@ public class UIManager : IManager
     private Button m_RegisterPanelButton;
     private Button m_LoginButton;
     private Button m_PlayerReadyButton;
-    private Button m_ToLandlordButton;
-    private Button m_NotToLandlordButton;
     private Button m_RegisterCloseButton;
     private Button m_StartGameCloseButton;
     private RectTransform m_RegisterPanel;
@@ -29,6 +27,14 @@ public class UIManager : IManager
     private Button m_MatchButton;
     private RectTransform m_MatchPanel;
     private Button m_CancelButton;
+
+    //游戏场景
+    public GameObject m_cardPrefab;
+    public GameObject m_cardPanel;
+    private Button m_ToLandlordButton;
+    private Button m_NotToLandlordButton;
+    private Text m_LordText;
+    private RectTransform m_PointPanel;
 
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
@@ -150,11 +156,15 @@ public class UIManager : IManager
                 Transform[] allChildren = rootObject.GetComponentsInChildren<Transform>(true);
                 foreach (Transform child in allChildren)
                 {
-                    if (child.gameObject.name == "PlayerReadyButton")
+                    if (child.gameObject.name == "Card")
                     {                      
-                        m_PlayerReadyButton = child.gameObject.GetComponent<Button>();
+                        m_cardPrefab = child.gameObject.GetComponent<GameObject>();
                     }
-                    else if (child.gameObject.name == "ToLandlordButton")
+                    else if (child.gameObject.name == "CardPanel")
+                    {
+                        m_cardPanel = child.gameObject.GetComponent<GameObject>();
+                    }
+                    else if(child.gameObject.name == "ToLandlordButton")
                     {
                         m_ToLandlordButton = child.gameObject.GetComponent<Button>();
                     }
@@ -162,9 +172,18 @@ public class UIManager : IManager
                     {
                         m_NotToLandlordButton = child.gameObject.GetComponent<Button>();
                     }
+                    else if(child.gameObject.name == "LordText")
+                    {
+                        m_LordText = child.gameObject.GetComponent<Text>();
+                    }
+                    else if(child.gameObject.name == "PointPanel")
+                    {
+                        m_PointPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
                 }
             }
-            m_PlayerReadyButton.onClick.AddListener(OnPlayerReadyButton);
+            m_ToLandlordButton.onClick.AddListener(OnPointButton);
+            m_NotToLandlordButton.onClick.AddListener(OnNoPointButton);
         }
     }
     // Start is called before the first frame update
@@ -238,6 +257,22 @@ public class UIManager : IManager
         m_MatchPanel.gameObject.SetActive(false);
     }
 
+    //战斗场景
+    public void OnPointButton()//叫地主
+    {
+        m_NetManager.roomInfo.isCalled = true;
+        m_NetManager.SendMessageToServer(33,m_NetManager.roomInfo);
+        m_PointPanel.gameObject.SetActive(false);
+        m_LordText.text = "叫地主";
+    }
+
+    public void OnNoPointButton()//不叫地主
+    {
+        m_NetManager.roomInfo.isCalled = false;
+        m_NetManager.SendMessageToServer(33, m_NetManager.roomInfo);
+        m_PointPanel.gameObject.SetActive(false);
+        m_LordText.text = "不叫";
+    }
 
     public void OnRegisterPanelButton()
     {
@@ -271,4 +306,5 @@ public class UIManager : IManager
             return;
         }
     }
+
 }

@@ -22,8 +22,8 @@ public class NetCode : MonoBehaviour
     public const int REQ_JOIN_TABLE = 19;
     public const int RSP_JOIN_TABLE = 20;
 
-    public const int REQ_NEW_TABLE = 21;
-    public const int RSP_NEW_TABLE = 22;
+    public const int REQ_SEAT_NUM = 21;
+    public const int RSP_SEAT_NUM = 22;
 
     public const int REQ_DEAL_POKER = 31;
     public const int RSP_DEAL_POKER = 32;

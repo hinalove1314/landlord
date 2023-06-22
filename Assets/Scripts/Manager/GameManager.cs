@@ -8,6 +8,7 @@ public class GameManager : IManager
     private UIManager m_UIManager;
     public MenuManager m_MenuManager;
     private NetManager m_NetManager;
+    private CardManager m_CardManager;
 
     private Transform m_WorldTrans; //World×ø±ê
     private Transform m_UITrans; //UI×ø±ê
@@ -31,6 +32,7 @@ public class GameManager : IManager
         m_UIManager = new UIManager();
         m_MenuManager = new MenuManager();
         m_NetManager = new NetManager();
+        m_CardManager = new CardManager();
 
         UnityMainThreadDispatcher.Instance.printInstance();
     }
@@ -45,6 +47,8 @@ public class GameManager : IManager
         Init(null);
 
         m_NetManager.connectToServer("127.0.0.1", 8888);
+
+        m_NetManager.Start();
     }
 
     public void Init(params object[] managers)
@@ -52,6 +56,7 @@ public class GameManager : IManager
         m_MenuManager.Init(m_UIManager,m_NetManager);
         m_UIManager.Init(m_MenuManager,m_NetManager);
         m_NetManager.Init(m_MenuManager);
+        m_CardManager.Init(m_UIManager);
     }
 
     // Update is called once per frame
