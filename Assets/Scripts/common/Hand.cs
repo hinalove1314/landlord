@@ -13,12 +13,15 @@ public class Hand : MonoBehaviour
         {
             Debug.Log("init hand instance");
             instance = this;
+            DontDestroyOnLoad(gameObject);  // 确保不会在加载新场景时销毁此游戏对象
         }
         else if (instance != this)
         {
+            Debug.Log("instance != this");
             Destroy(gameObject);
         }
     }
+
     void Start()
     {
         
@@ -39,5 +42,18 @@ public class Hand : MonoBehaviour
         // 设置牌对象的属性，例如更改牌的图片等
         CardPrefab cardComponent = cardObject.GetComponent<CardPrefab>();
         cardComponent.SetCard(cardData);
+    }
+
+    public void ClearAllCards()
+    {
+        // 遍历卡片列表，销毁每一个 GameObject
+        foreach (Transform child in transform)
+        {
+            if(child.name == "Card")
+            {
+                continue;
+            }
+            GameObject.Destroy(child.gameObject);
+        }
     }
 }

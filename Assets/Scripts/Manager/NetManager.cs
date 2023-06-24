@@ -17,6 +17,7 @@ public class NetManager : MonoBehaviour
     private LoginData data;
     private int isLoadMatchScene = 0;
     private int isLoadGameScene = 0;
+    private int LordNum;
 
     public RoomInfo roomInfo;
     public PlayerInfo playerInfo;
@@ -24,6 +25,8 @@ public class NetManager : MonoBehaviour
     private ConcurrentQueue<string> messages = new ConcurrentQueue<string>();
 
     private MenuManager m_MenuManager;
+    private UIManager m_UIManager;
+    private CardManager m_CardManager;
     public void connectToServer(string serverIP, int port)
     {
         //连接服务器
@@ -50,6 +53,8 @@ public class NetManager : MonoBehaviour
     public void Init(params object[] managers)
     {
         m_MenuManager = managers[0] as MenuManager;
+        m_UIManager = managers[1] as UIManager;
+        m_CardManager = managers[2] as CardManager;
     }
 
     // Start is called before the first frame update
@@ -141,6 +146,7 @@ public class NetManager : MonoBehaviour
 
         while (true)
         {
+            buffer = new byte[4096];
             int length = stream.Read(buffer, 0, buffer.Length);
             if(length > 0)
             {
@@ -194,11 +200,50 @@ public class NetManager : MonoBehaviour
                         Debug.Log("jsonToParse: " + jsonToParse); // 打印出完整的 JSON 字符串以便于调试
                         CardsContainer container = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse);
                         Card[] cards = container.cards;
+                        m_CardManager.allCards.AddRange(cards);
                         foreach (Card card in cards)
                         {
-                            
                             Debug.Log("Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
                             UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.AddCard(card));
+                        }
+                        break;
+                    case NetCode.RSP_DEAL_LORD:
+                        if (int.TryParse(jsonData[0].ToString(), out int lordnum))
+                        {
+                            LordNum = lordnum;
+                        }
+                        UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                        {
+                            m_UIManager.DealLordImage(playerInfo.SeatNum, lordnum);
+                        });
+                        break;
+                    case NetCode.RSP_DEAL_LORD_CARD:
+                        jsonData = jsonData.Trim(); // 删除可能存在的多余空白字符
+                        string jsonToParse2 = "{\"cards\":" + jsonData + "}";
+                        Debug.Log("LordCard: " + jsonToParse2); // 打印出完整的 JSON 字符串以便于调试
+                        CardsContainer container_lord = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse2);
+                        Card[] cards_lord = container_lord.cards;
+                        m_CardManager.allCards.AddRange(cards_lord);
+                        m_CardManager.allCards.Sort((card1, card2) => card1.ValueWeight.CompareTo(card2.ValueWeight));
+                        for (int i = 0; i < 3; i++)
+                        {
+                            int index = i; // 创建一个新的变量来保存 i 的当前值
+                            UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                            {
+                                m_UIManager.showLordCard(cards_lord[index].value, cards_lord[index].suit, index);//显示地主牌信息
+                            });
+                        }
+
+                        if (playerInfo.SeatNum == LordNum)
+                        {
+                            UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.ClearAllCards());
+                        }
+                        foreach (Card card in m_CardManager.allCards)
+                        {
+                            if(playerInfo.SeatNum == LordNum)
+                            {
+                                UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.AddCard(card));
+                            }
                         }
                         break;
                 }

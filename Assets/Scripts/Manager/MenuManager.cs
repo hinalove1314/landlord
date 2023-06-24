@@ -140,11 +140,11 @@ public class MenuManager : IManager
     {
         Debug.Log("LoadGameScene");
         isGameSceneLoading = true;
-        Debug.Log("LoadGameScene");
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Game");
         asyncLoad.completed += (AsyncOperation op) => {
             Debug.Log("Game Scene loaded");
             m_UIManager.Init(GameManager.Instance.m_MenuManager);
+            Hand.instance = GameObject.FindObjectOfType<Hand>(); 
             isGameSceneLoading = false;
         };
     }

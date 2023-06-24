@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 35104467}
   m_Layer: 0
-  m_Name: RightPlayer
+  m_Name: player2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1073,7 +1073,7 @@ GameObject:
   - component: {fileID: 955913299}
   - component: {fileID: 955913298}
   m_Layer: 0
-  m_Name: PlayerImage
+  m_Name: Player1_Image
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1353,7 +1353,7 @@ GameObject:
   - component: {fileID: 1287244246}
   - component: {fileID: 1287244245}
   m_Layer: 0
-  m_Name: UpCard2
+  m_Name: LordCard2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1497,7 +1497,7 @@ GameObject:
   - component: {fileID: 1489690598}
   - component: {fileID: 1489690597}
   m_Layer: 0
-  m_Name: LeftPlayerImage
+  m_Name: Player3_Image
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1685,7 +1685,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1727371018}
   m_Layer: 0
-  m_Name: Player
+  m_Name: Player1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1722,7 +1722,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1768880269}
   m_Layer: 0
-  m_Name: LeftPlayer
+  m_Name: player3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1762,7 +1762,7 @@ GameObject:
   - component: {fileID: 1794729436}
   - component: {fileID: 1794729435}
   m_Layer: 0
-  m_Name: UpCard3
+  m_Name: LordCard3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1838,7 +1838,7 @@ GameObject:
   - component: {fileID: 1822964930}
   - component: {fileID: 1822964929}
   m_Layer: 0
-  m_Name: RightPlayerImage
+  m_Name: Player2_Image
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1953,7 +1953,7 @@ GameObject:
   - component: {fileID: 1961878469}
   - component: {fileID: 1961878468}
   m_Layer: 0
-  m_Name: UpCard1
+  m_Name: LordCard1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

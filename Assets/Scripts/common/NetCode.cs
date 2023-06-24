@@ -31,11 +31,11 @@ public class NetCode : MonoBehaviour
     public const int REQ_CALL_SCORE = 33;
     public const int RSP_CALL_SCORE = 34;
 
-    public const int REQ_SHOW_POKER = 35;
-    public const int RSP_SHOW_POKER = 36;
+    public const int REQ_DEAL_LORD = 35;
+    public const int RSP_DEAL_LORD = 36;
 
-    public const int REQ_SHOT_POKER = 37;
-    public const int RSP_SHOT_POKER = 38;
+    public const int REQ_DEAL_LORD_CARD = 37;
+    public const int RSP_DEAL_LORD_CARD = 38;
 
     public const int REQ_GAME_OVER = 41;
     public const int RSP_GAME_OVER = 42;

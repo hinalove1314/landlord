@@ -55,7 +55,7 @@ public class GameManager : IManager
     {
         m_MenuManager.Init(m_UIManager,m_NetManager);
         m_UIManager.Init(m_MenuManager,m_NetManager);
-        m_NetManager.Init(m_MenuManager);
+        m_NetManager.Init(m_MenuManager,m_UIManager,m_CardManager);
         m_CardManager.Init(m_UIManager);
     }
 

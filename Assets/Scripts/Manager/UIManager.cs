@@ -35,6 +35,13 @@ public class UIManager : IManager
     private Button m_NotToLandlordButton;
     private Text m_LordText;
     private RectTransform m_PointPanel;
+    private Image m_player1_image;
+    private Image m_player2_image;
+    private Image m_player3_image;
+
+    private Image m_LordCard1_image;
+    private Image m_LordCard2_image;
+    private Image m_LordCard3_image;
 
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
@@ -180,6 +187,30 @@ public class UIManager : IManager
                     {
                         m_PointPanel = child.gameObject.GetComponent<RectTransform>();
                     }
+                    else if(child.gameObject.name == "Player1_Image")
+                    {
+                        m_player1_image = child.gameObject.GetComponent<Image>();
+                    }
+                    else if (child.gameObject.name == "Player2_Image")
+                    {
+                        m_player2_image = child.gameObject.GetComponent<Image>();
+                    }
+                    else if (child.gameObject.name == "Player3_Image")
+                    {
+                        m_player3_image = child.gameObject.GetComponent<Image>();
+                    }
+                    else if (child.gameObject.name == "LordCard1")
+                    {
+                        m_LordCard1_image = child.gameObject.GetComponent<Image>();
+                    }
+                    else if (child.gameObject.name == "LordCard2")
+                    {
+                        m_LordCard2_image = child.gameObject.GetComponent<Image>();
+                    }
+                    else if (child.gameObject.name == "LordCard3")
+                    {
+                        m_LordCard3_image = child.gameObject.GetComponent<Image>();
+                    }
                 }
             }
             m_ToLandlordButton.onClick.AddListener(OnPointButton);
@@ -272,6 +303,67 @@ public class UIManager : IManager
         m_NetManager.SendMessageToServer(33, m_NetManager.roomInfo);
         m_PointPanel.gameObject.SetActive(false);
         m_LordText.text = "不叫";
+    }
+
+    public void DealLordImage(int player_seat,int lord_seat) //变更地主的头像
+    {
+        Debug.Log("DealLordImage");
+        Debug.Log("player_seat=" + player_seat);
+        Debug.Log("lord_seat=" + lord_seat);
+        if (player_seat == lord_seat)
+        {
+            Debug.Log("DealLordImage1");
+            Sprite newSprite = Resources.Load<Sprite>("Identity/Landlord"); // 更换为你地主图片的路径
+            m_player1_image.sprite = newSprite;
+        }
+        else if(lord_seat-player_seat == 1 || lord_seat - player_seat==-2)
+        {
+            Debug.Log("DealLordImage2");
+            Sprite newSprite = Resources.Load<Sprite>("Identity/Landlord"); // 更换为你地主图片的路径
+            m_player2_image.sprite = newSprite;
+        }
+        else if(lord_seat - player_seat == 2 || lord_seat - player_seat==-1)
+        {
+            Debug.Log("DealLordImage3");
+            Sprite newSprite = Resources.Load<Sprite>("Identity/Landlord"); // 更换为你地主图片的路径
+            m_player3_image.sprite = newSprite;
+        }
+    }
+
+    //显示地主牌
+    public void showLordCard(string card_value, string card_suit,int card_num)
+    {
+        string imagePath;
+        Debug.Log("showLordCard");
+        Debug.Log("card_suit=" + card_suit);
+        Debug.Log("card_value=" + card_value);
+        imagePath = "Poker/" + card_suit + card_value;
+        if (card_value == "big_joker")
+        {
+            imagePath = "Poker/" + "LJoker";
+        }
+        else if (card_value == "little_joker")
+        {
+            imagePath = "Poker/" + "SJoker";
+        }
+        // 使用 Resources.Load 函数来加载图片
+        Sprite newSprite = Resources.Load<Sprite>(imagePath);
+
+        // 更改 Image 组件的图片 
+        if(card_num == 0)
+        {
+            Debug.Log("card_num == 1");
+            m_LordCard1_image.sprite = newSprite;
+        }else if(card_num == 1)
+        {
+            Debug.Log("card_num == 2");
+            m_LordCard2_image.sprite = newSprite;
+        }
+        else if(card_num == 2)
+        {
+            Debug.Log("card_num == 3");
+            m_LordCard3_image.sprite = newSprite;
+        }
     }
 
     public void OnRegisterPanelButton()
