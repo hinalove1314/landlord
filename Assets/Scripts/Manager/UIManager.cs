@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class UIManager : IManager
 {
+    private static UIManager instance;
     private InputField m_UsernameInputField;
     private InputField m_PasswordInputField;
     private InputField m_PasswordAgainInputField;
@@ -43,12 +44,30 @@ public class UIManager : IManager
     private Image m_LordCard2_image;
     private Image m_LordCard3_image;
 
+    private Button m_PlayCardButton;
+    private Button m_UnPlayCardButton;
+    public RectTransform m_PlayPanel;
+    public RectTransform m_PlayCardPanel;
+    public RectTransform m_UnPlayCardPanel;
+
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
 
     private bool StartGamepanelActive = false;
     private bool RegisterGamePanelActive = false;
+    public bool isFirstPlayCard = true;//是否是第一下出牌
 
+    public static UIManager Instance //单例模式
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = new UIManager();
+            }
+            return instance;
+        }
+    }
     public void Init(params object[] managers)
     {
         Scene LoginScene = SceneManager.GetSceneByName("Login");
@@ -211,10 +230,32 @@ public class UIManager : IManager
                     {
                         m_LordCard3_image = child.gameObject.GetComponent<Image>();
                     }
+                    else if (child.gameObject.name == "PlayCardButton")
+                    {
+                        m_PlayCardButton = child.gameObject.GetComponent<Button>();
+                    }
+                    else if (child.gameObject.name == "UnPlayCardButton")
+                    {
+                        m_UnPlayCardButton = child.gameObject.GetComponent<Button>();
+                    }
+                    else if (child.gameObject.name == "PlayPanel")
+                    {
+                        m_PlayPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
+                    else if (child.gameObject.name == "PlayCardPanel")
+                    {
+                        m_PlayCardPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
+                    else if (child.gameObject.name == "UnPlayCardPanel")
+                    {
+                        m_UnPlayCardPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
                 }
             }
             m_ToLandlordButton.onClick.AddListener(OnPointButton);
             m_NotToLandlordButton.onClick.AddListener(OnNoPointButton);
+            m_PlayCardButton.onClick.AddListener(OnPlayCardButton);
+            m_UnPlayCardButton.onClick.AddListener(OnUnPlayCardButton);
         }
     }
     // Start is called before the first frame update
@@ -280,7 +321,7 @@ public class UIManager : IManager
     public void OnMatchButton()
     {
         m_MatchPanel.gameObject.SetActive(true);
-        m_NetManager.sendMsg(4, 13);
+        NetManager.Instance.sendMsg(4, 13);
     }
 
     public void OnCancelButton()
@@ -291,16 +332,16 @@ public class UIManager : IManager
     //战斗场景
     public void OnPointButton()//叫地主
     {
-        m_NetManager.roomInfo.isCalled = true;
-        m_NetManager.SendMessageToServer(33,m_NetManager.roomInfo);
+        NetManager.Instance.roomInfo.isCalled = true;
+        NetManager.Instance.SendMessageToServer(33,NetManager.Instance.roomInfo);
         m_PointPanel.gameObject.SetActive(false);
         m_LordText.text = "叫地主";
     }
 
     public void OnNoPointButton()//不叫地主
     {
-        m_NetManager.roomInfo.isCalled = false;
-        m_NetManager.SendMessageToServer(33, m_NetManager.roomInfo);
+        NetManager.Instance.roomInfo.isCalled = false;
+        NetManager.Instance.SendMessageToServer(33, NetManager.Instance.roomInfo);
         m_PointPanel.gameObject.SetActive(false);
         m_LordText.text = "不叫";
     }
@@ -366,6 +407,86 @@ public class UIManager : IManager
         }
     }
 
+    //出牌
+    public void OnPlayCardButton()
+    {
+        bool isCanPlayCard = false;
+        Debug.Log("Initial isCanPlayCard: " + isCanPlayCard); // 输出 isCanPlayCard 的初始值
+
+        HandManager.Instance.CountCards();
+        HandManager.Instance.PrintCards();
+
+        HandManager.Instance.LastCardType = HandManager.Instance.cardType; // 记录上一名玩家的出牌类型
+
+        Debug.Log("isFirstPlayCard before check: " + isFirstPlayCard); // 输出检查之前的 isFirstPlayCard 的值
+
+        if(HandManager.Instance.ConformRule() == true)
+        {
+            Debug.Log("HandManager.Instance.ConformRule() == true");
+        }
+        else
+        {
+            Debug.Log("HandManager.Instance.ConformRule() == false");
+        }
+
+        //还需要加一个逻辑，如果成功出牌
+        if (HandManager.Instance.ConformRule() == true)
+        {
+            if (isFirstPlayCard == false) // 不是第一次出牌，需要比较手牌了
+            {
+                isCanPlayCard = HandManager.Instance.CompareCard();
+                Debug.Log("isCanPlayCard after compare: " + isCanPlayCard); // 输出比较后的 isCanPlayCard 的值
+            }
+            else // 第一次出牌
+            {
+                Debug.Log("修改isFirstPlayCard为false");
+                isCanPlayCard = true;
+                isFirstPlayCard = false; //这个只能修改到自己客户端的isFirstPlayCard，其他客户端还要单独修改
+            }
+
+            Debug.Log("isCanPlayCard before send check: " + isCanPlayCard); // 输出发送检查前的 isCanPlayCard 的值
+
+            if (isCanPlayCard) // 比较大于前一个手牌了,可以出牌
+            {
+                HandManager.Instance.sendCardServer(HandManager.Instance.PlayCards); // 把手牌数据传到服务器
+                                                                                     //这里不知道要不要加一个发送座位信息
+                m_PlayPanel.gameObject.SetActive(false);
+
+                HandManager.Instance.RemovePlayCards();//出票时清除手牌
+            }
+            else
+            {
+                m_LordText.text = "test"; //显示出牌不合规的消息
+            }
+        }
+
+        // HandManager.Instance.sendCardServer(HandManager.Instance.PlayCards); // 把手牌数据传到服务器
+        // 这里不知道要不要加一个发送座位信息
+        // m_PlayPanel.gameObject.SetActive(false);
+    }
+
+    public void OnUnPlayCardButton()
+    {
+        Debug.Log("UnPlayCard");
+
+        HandManager.Instance.SendLastCardListToServer();
+
+        m_PlayPanel.gameObject.SetActive(false);
+
+        m_LordText.text = "不出";
+    }
+
+    public void HideUnPlayCardButton()
+    {
+        m_UnPlayCardPanel.gameObject.SetActive(false);
+    }
+
+    public void showLordButton()
+    {
+        m_PlayPanel.gameObject.SetActive(true);
+        m_LordText.text = "";
+    }
+
     public void OnRegisterPanelButton()
     {
         if (string.IsNullOrEmpty(m_UsernameInputField.text))
@@ -383,7 +504,7 @@ public class UIManager : IManager
             m_PromptText.text = "两次输入密码不一致!";
             return;
         }
-        m_MenuManager.userLogin();
+        MenuManager.Instance.userLogin();
     }
     public void OnLoginButton()
     {

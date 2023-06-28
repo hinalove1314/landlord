@@ -9,6 +9,7 @@ using System;
 
 public class MenuManager : IManager
 {
+    private static MenuManager instance;
     public string Account;
     public string Password;
     public string Password_again;
@@ -20,13 +21,27 @@ public class MenuManager : IManager
     private MenuManager m_MenuManager;
     private GameManager m_GameManager;
     private NetManager m_NetManager;
+    private HandManager m_HandManager;
 
     private bool isMatchSceneLoading = false;//确保只加载一次场景
     private bool isGameSceneLoading = false;
+
+    public static MenuManager Instance //单例模式
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = new MenuManager();
+            }
+            return instance;
+        }
+    }
     public void Init(params object[] managers)
     {
         m_UIManager = managers[0] as UIManager;
         m_NetManager = managers[1] as NetManager;
+        m_HandManager = managers[2] as HandManager;
     }
     // Start is called before the first frame update
     void Start()
@@ -39,8 +54,8 @@ public class MenuManager : IManager
 
         LoginData m_LoginData = new LoginData();
 
-        m_LoginData.dataAccount = m_UIManager.UsernameInputFiled.text;
-        m_LoginData.dataPassword = m_UIManager.PasswordInputFiled.text;
+        m_LoginData.dataAccount = UIManager.Instance.UsernameInputFiled.text;
+        m_LoginData.dataPassword = UIManager.Instance.PasswordInputFiled.text;
 
         Debug.Log("dataAccount=" + m_LoginData.dataAccount);
         Debug.Log("dataPassword=" + m_LoginData.dataPassword);
@@ -75,7 +90,7 @@ public class MenuManager : IManager
         Buffer.BlockCopy(jsonBytes, 0, data, jsonLengthBytes.Length + netCodeBytes.Length, jsonBytes.Length);
 
         Debug.Log("JSON data to send: " + login_json);
-        m_NetManager.stream.Write(data, 0, data.Length);
+        NetManager.Instance.stream.Write(data, 0, data.Length);
 
 
         //接收响应数据并打印
@@ -105,7 +120,7 @@ public class MenuManager : IManager
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Match");
             asyncLoad.completed += (AsyncOperation op) => {
                 Debug.Log("Match Scene loaded");
-                m_UIManager.Init(GameManager.Instance.m_MenuManager);
+                UIManager.Instance.Init(GameManager.Instance.m_MenuManager);
                 isMatchSceneLoading = false;
             };
         }
@@ -143,8 +158,8 @@ public class MenuManager : IManager
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync("Game");
         asyncLoad.completed += (AsyncOperation op) => {
             Debug.Log("Game Scene loaded");
-            m_UIManager.Init(GameManager.Instance.m_MenuManager);
-            Hand.instance = GameObject.FindObjectOfType<Hand>(); 
+            UIManager.Instance.Init(GameManager.Instance.m_MenuManager);
+            m_HandManager = GameObject.FindObjectOfType<HandManager>(); 
             isGameSceneLoading = false;
         };
     }

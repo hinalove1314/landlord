@@ -37,11 +37,11 @@ public class NetCode : MonoBehaviour
     public const int REQ_DEAL_LORD_CARD = 37;
     public const int RSP_DEAL_LORD_CARD = 38;
 
-    public const int REQ_GAME_OVER = 41;
-    public const int RSP_GAME_OVER = 42;
+    public const int REQ_PLAY_CARD = 41;
+    public const int RSP_PLAY_CARD = 42;
 
-    public const int REQ_CHAT = 43;
-    public const int RSP_CHAT = 44;
+    public const int REQ_UNPLAY_CARD = 43;
+    public const int RSP_UNPLAY_CARD = 44;
 
     public const int REQ_RESTART = 45;
     public const int RSP_RESTART = 46;

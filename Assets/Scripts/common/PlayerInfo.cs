@@ -6,4 +6,5 @@ using UnityEngine;
 public class PlayerInfo
 {
     public int SeatNum;
+    public int CardNum;
 }

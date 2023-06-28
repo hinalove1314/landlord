@@ -8,8 +8,9 @@ using System.Threading;
 using System.Collections.Concurrent;
 using Newtonsoft.Json;
 
-public class NetManager : MonoBehaviour
+public class NetManager : IManager
 {
+    private static NetManager instance;
     private Thread thread;
     public TcpClient client;
     public NetworkStream stream;
@@ -27,6 +28,23 @@ public class NetManager : MonoBehaviour
     private MenuManager m_MenuManager;
     private UIManager m_UIManager;
     private CardManager m_CardManager;
+    private HandManager m_HandManager;
+
+    public CardsContainer LastCardContainer;
+
+    public static NetManager Instance //单例模式
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = new NetManager();
+            }
+            return instance;
+        }
+    }
+
+
     public void connectToServer(string serverIP, int port)
     {
         //连接服务器
@@ -55,6 +73,7 @@ public class NetManager : MonoBehaviour
         m_MenuManager = managers[0] as MenuManager;
         m_UIManager = managers[1] as UIManager;
         m_CardManager = managers[2] as CardManager;
+        m_HandManager = managers[3] as HandManager;
     }
 
     // Start is called before the first frame update
@@ -65,6 +84,10 @@ public class NetManager : MonoBehaviour
         roomInfo.isCalled = false;//初始化没有叫地主
 
         playerInfo = new PlayerInfo();
+    }
+    public void Destroy()
+    {
+
     }
 
     // Update is called once per frame
@@ -78,12 +101,12 @@ public class NetManager : MonoBehaviour
 
         if (isLoadMatchScene ==1)
         {
-            m_MenuManager.LoadMatchScene(data.isLogin);
+            MenuManager.Instance.LoadMatchScene(data.isLogin);
         }
 
         if(isLoadGameScene == 1)
         {
-            m_MenuManager.LoadGameScene();
+            MenuManager.Instance.LoadGameScene();
         }
     }
 
@@ -123,11 +146,14 @@ public class NetManager : MonoBehaviour
     public void SendMessageToServer(int netcode, object messageObject)
     {
         string messageJson = JsonUtility.ToJson(messageObject);
+        Debug.Log("Json Message to be sent: " + messageJson); // 输出要发送的Json信息
 
         byte[] netcodeBytes = BitConverter.GetBytes(netcode);
         byte[] messageBytes = Encoding.UTF8.GetBytes(messageJson);
 
         int totalSize = netcodeBytes.Length + messageBytes.Length;
+        Debug.Log("Total Size: " + totalSize); // 输出总的数据大小
+
         byte[] sizeBytes = BitConverter.GetBytes(totalSize);
 
         byte[] dataToSend = new byte[sizeBytes.Length + netcodeBytes.Length + messageBytes.Length];
@@ -135,8 +161,21 @@ public class NetManager : MonoBehaviour
         Buffer.BlockCopy(netcodeBytes, 0, dataToSend, sizeBytes.Length, netcodeBytes.Length);
         Buffer.BlockCopy(messageBytes, 0, dataToSend, sizeBytes.Length + netcodeBytes.Length, messageBytes.Length);
 
-        stream.Write(dataToSend, 0, dataToSend.Length);
+        Debug.Log("Stream object: " + stream);
+
+        try
+        {
+            stream.Write(dataToSend, 0, dataToSend.Length);
+            Debug.Log("Data sent to server successfully!"); // 输出数据成功发送的信息
+        }
+        catch (Exception ex)
+        {
+            Debug.Log("Error when sending data to server: " + ex.Message); // 输出异常信息
+        }
+
+        Debug.Log("Data sent to server successfully!"); // 输出数据成功发送的信息
     }
+
 
     void ReceiveMessage()
     {
@@ -182,7 +221,7 @@ public class NetManager : MonoBehaviour
                         }
                         UnityMainThreadDispatcher.Instance.Enqueue(() =>
                         {
-                            m_MenuManager.LoadGameScene();
+                            MenuManager.Instance.LoadGameScene();
                         });
                         break;
                     case NetCode.RSP_SEAT_NUM:
@@ -200,11 +239,11 @@ public class NetManager : MonoBehaviour
                         Debug.Log("jsonToParse: " + jsonToParse); // 打印出完整的 JSON 字符串以便于调试
                         CardsContainer container = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse);
                         Card[] cards = container.cards;
-                        m_CardManager.allCards.AddRange(cards);
+                        HandManager.Instance.allCards.AddRange(cards);
                         foreach (Card card in cards)
                         {
                             Debug.Log("Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
-                            UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.AddCard(card));
+                            UnityMainThreadDispatcher.Instance.Enqueue(() => HandManager.Instance.AddCard(card));
                         }
                         break;
                     case NetCode.RSP_DEAL_LORD:
@@ -214,7 +253,7 @@ public class NetManager : MonoBehaviour
                         }
                         UnityMainThreadDispatcher.Instance.Enqueue(() =>
                         {
-                            m_UIManager.DealLordImage(playerInfo.SeatNum, lordnum);
+                            UIManager.Instance.DealLordImage(playerInfo.SeatNum, lordnum);
                         });
                         break;
                     case NetCode.RSP_DEAL_LORD_CARD:
@@ -223,28 +262,58 @@ public class NetManager : MonoBehaviour
                         Debug.Log("LordCard: " + jsonToParse2); // 打印出完整的 JSON 字符串以便于调试
                         CardsContainer container_lord = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse2);
                         Card[] cards_lord = container_lord.cards;
-                        m_CardManager.allCards.AddRange(cards_lord);
-                        m_CardManager.allCards.Sort((card1, card2) => card1.ValueWeight.CompareTo(card2.ValueWeight));
+                        HandManager.Instance.allCards.AddRange(cards_lord);
+                        HandManager.Instance.allCards.Sort((card1, card2) => card1.ValueWeight.CompareTo(card2.ValueWeight));
                         for (int i = 0; i < 3; i++)
                         {
                             int index = i; // 创建一个新的变量来保存 i 的当前值
                             UnityMainThreadDispatcher.Instance.Enqueue(() =>
                             {
-                                m_UIManager.showLordCard(cards_lord[index].value, cards_lord[index].suit, index);//显示地主牌信息
+                                UIManager.Instance.showLordCard(cards_lord[index].value, cards_lord[index].suit, index);//显示地主牌信息
                             });
                         }
 
                         if (playerInfo.SeatNum == LordNum)
                         {
-                            UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.ClearAllCards());
+                            UnityMainThreadDispatcher.Instance.Enqueue(() => HandManager.Instance.ClearAllCards());
                         }
-                        foreach (Card card in m_CardManager.allCards)
+                        Debug.Log("playerInfo.SeatNum="+ playerInfo.SeatNum);
+                        Debug.Log("LordNum=" + LordNum);
+                        foreach (Card card in HandManager.Instance.allCards)
                         {
-                            if(playerInfo.SeatNum == LordNum)
+                            Debug.Log("Lord Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                            if (playerInfo.SeatNum == LordNum)
                             {
-                                UnityMainThreadDispatcher.Instance.Enqueue(() => Hand.instance.AddCard(card));
+                                Debug.Log("Lord Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                                UnityMainThreadDispatcher.Instance.Enqueue(() => HandManager.Instance.AddCard(card));
                             }
                         }
+                        //地主显示出牌按钮
+                        if (playerInfo.SeatNum == LordNum)
+                        {
+                            UnityMainThreadDispatcher.Instance.Enqueue(() => UIManager.Instance.showLordButton());
+                        }
+                        break;
+                    case NetCode.RSP_PLAY_CARD:
+                        string jsonToParse3 = jsonData.Trim();
+                        Debug.Log("jsonToParse3: " + jsonToParse3); // 打印出完整的 JSON 字符串以便于调试
+                        LastCardContainer = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse3);//接收到的上一个客户端的卡牌信息
+                        foreach (Card card in LastCardContainer.cards)
+                        {
+                            Debug.Log("Last Player Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                        }
+
+                        UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                        {
+                            UIManager.Instance.showLordButton(); //收到上一个客户端的卡牌信息后，把当前客户端的出牌按钮显示
+                            UIManager.Instance.isFirstPlayCard = false; //接收到了上一个客户端的信息，说明已经不是第一个出牌的了
+                        });
+                        break;
+                    case NetCode.RSP_UNPLAY_CARD:
+                        UnityMainThreadDispatcher.Instance.Enqueue(() =>
+                        {
+                            UIManager.Instance.HideUnPlayCardButton();
+                        });
                         break;
                 }
             }

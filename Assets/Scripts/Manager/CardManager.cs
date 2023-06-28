@@ -8,10 +8,23 @@ public class CardManager : MonoBehaviour
     private UIManager m_UIManager;
 
     public List<Card> allCards = new List<Card>();//代表所有牌
-    public static CardManager Instance { get; private set; }
+    private static CardManager instance;
 
     public GameObject cardPrefab;
     public Transform cardPanel;
+
+    public static CardManager Instance //单例模式
+    {
+        get
+        {
+            if (instance == null)
+            {
+                Debug.Log("CardManager instance Init");
+                instance = new CardManager();
+            }
+            return instance;
+        }
+    }
 
     public void Init(params object[] managers)
     {
@@ -20,14 +33,14 @@ public class CardManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
+/*        if (Instance == null)
         {
             Instance = this;
         }
         else
         {
             Destroy(gameObject);
-        }
+        }*/
     }
 
     public void SortCards(Card[] cards)

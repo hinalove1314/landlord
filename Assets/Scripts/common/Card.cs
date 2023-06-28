@@ -10,4 +10,8 @@ public class Card
     public string suit;
     public int ValueWeight;
     public int SuitWeight;
+
+    [System.NonSerialized]
+    public string cardType;
 }
+
