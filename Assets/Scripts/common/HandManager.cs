@@ -159,6 +159,16 @@ public class HandManager : MonoBehaviour,IManager
         PlayCards.Clear();
     }
 
+    public void PlayCardOnTable()
+    {
+        CardPrefab[] allCardPrefabs = GameObject.FindObjectsOfType<CardPrefab>();
+
+        foreach (Card card in PlayCards)
+        {
+            CardPrefab cardPrefabToRemove = Array.Find(allCardPrefabs, cardPrefab => cardPrefab.m_cardData.Equals(card));
+            cardPrefabToRemove.transform.parent = UIManager.Instance.m_Player1CardPanel;
+        }
+    }
     public void ClearAllCards()
     {
         lock (lockObj)
@@ -434,11 +444,9 @@ public class HandManager : MonoBehaviour,IManager
         return true;
     }
 
-    public void sendCardServer(List<Card>cardList) //发送出牌的数据到服务端
+    public void sendPlayerInfoServer(PlayerInfo playerInfo) //发送出牌的数据到服务端
     {
-        CardList container = new CardList();
-        container.cards = cardList;
-        NetManager.Instance.SendMessageToServer(41, container);
+        NetManager.Instance.SendMessageToServer_net(41, playerInfo);
     }
 
     public void SendLastCardListToServer() //将接收到的数据直接发送给下一个客户端

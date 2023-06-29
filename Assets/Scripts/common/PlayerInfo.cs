@@ -5,6 +5,7 @@ using UnityEngine;
 [System.Serializable]
 public class PlayerInfo
 {
-    public int SeatNum;
-    public int CardNum;
+    public int SeatNum { get; set; }
+    public int CardNum { get; set; }
+    public List<Card> PlayCards { get; set; }
 }

@@ -19,6 +19,8 @@ public class NetManager : IManager
     private int isLoadMatchScene = 0;
     private int isLoadGameScene = 0;
     private int LordNum;
+    public int m_seatnum;
+
 
     public RoomInfo roomInfo;
     public PlayerInfo playerInfo;
@@ -176,6 +178,39 @@ public class NetManager : IManager
         Debug.Log("Data sent to server successfully!"); // 输出数据成功发送的信息
     }
 
+    public void SendMessageToServer_net(int netcode, PlayerInfo playerInfo)
+    {
+        string messageJson = JsonConvert.SerializeObject(playerInfo); // 使用Json.NET来序列化
+        Debug.Log("Json Message to be sent: " + messageJson); // 输出要发送的Json信息
+
+        byte[] netcodeBytes = BitConverter.GetBytes(netcode);
+        byte[] messageBytes = Encoding.UTF8.GetBytes(messageJson);
+
+        int totalSize = netcodeBytes.Length + messageBytes.Length;
+        Debug.Log("Total Size: " + totalSize); // 输出总的数据大小
+
+        byte[] sizeBytes = BitConverter.GetBytes(totalSize);
+
+        byte[] dataToSend = new byte[sizeBytes.Length + netcodeBytes.Length + messageBytes.Length];
+        Buffer.BlockCopy(sizeBytes, 0, dataToSend, 0, sizeBytes.Length);
+        Buffer.BlockCopy(netcodeBytes, 0, dataToSend, sizeBytes.Length, netcodeBytes.Length);
+        Buffer.BlockCopy(messageBytes, 0, dataToSend, sizeBytes.Length + netcodeBytes.Length, messageBytes.Length);
+
+        Debug.Log("Stream object: " + stream);
+
+        try
+        {
+            stream.Write(dataToSend, 0, dataToSend.Length);
+            Debug.Log("Data sent to server successfully!"); // 输出数据成功发送的信息
+        }
+        catch (Exception ex)
+        {
+            Debug.Log("Error when sending data to server: " + ex.Message); // 输出异常信息
+        }
+
+        Debug.Log("Data sent to server successfully!"); // 输出数据成功发送的信息
+    }
+
 
     void ReceiveMessage()
     {
@@ -230,6 +265,7 @@ public class NetManager : IManager
                         if (int.TryParse(jsonData[0].ToString(), out int seatnum))
                         {
                             playerInfo.SeatNum = seatnum;
+                            m_seatnum = seatnum;
                         }
                         break;
                     case NetCode.RSP_DEAL_POKER:
@@ -297,7 +333,28 @@ public class NetManager : IManager
                     case NetCode.RSP_PLAY_CARD:
                         string jsonToParse3 = jsonData.Trim();
                         Debug.Log("jsonToParse3: " + jsonToParse3); // 打印出完整的 JSON 字符串以便于调试
-                        LastCardContainer = JsonConvert.DeserializeObject<CardsContainer>(jsonToParse3);//接收到的上一个客户端的卡牌信息
+                        PlayerInfo playerInfo_recv = JsonConvert.DeserializeObject<PlayerInfo>(jsonToParse3);//接收到的上一个客户端的玩家信息
+                                                                                                        // Make sure LastCardContainer is initialized
+                        Debug.Log("PlayerInfo - SeatNum: " + playerInfo.SeatNum + ", CardNum: " + playerInfo.CardNum);
+                        if (LastCardContainer == null)
+                        {
+                            LastCardContainer = new CardsContainer();
+                        }
+
+                        // Check if PlayCards is not null before trying to access it
+                        if (playerInfo_recv.PlayCards != null)
+                        {
+                            LastCardContainer.cards = playerInfo_recv.PlayCards.ToArray();
+                            Debug.Log("LastCardContainer.cards length: " + LastCardContainer.cards.Length);
+                        }
+                        else
+                        {
+                            Debug.LogError("PlayCards is null");
+                        }
+                        foreach (Card card in playerInfo_recv.PlayCards)
+                        {
+                            Debug.Log("playerInfo Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
+                        }
                         foreach (Card card in LastCardContainer.cards)
                         {
                             Debug.Log("Last Player Card Value: " + card.value + ", Card Suit: " + card.suit + ", ValueWeight: " + card.ValueWeight + ", SuitWeight: " + card.SuitWeight);
@@ -319,7 +376,13 @@ public class NetManager : IManager
             }
         }
     }
-
+    
+    public void syncUser() //发送数据前同步信息到Playerinfo中
+    {
+        playerInfo.SeatNum = m_seatnum;
+        //playerInfo.CardNum =;
+        playerInfo.PlayCards = HandManager.Instance.PlayCards;
+    }
 
     public void ReadResponse()
     {

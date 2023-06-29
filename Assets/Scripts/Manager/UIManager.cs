@@ -49,6 +49,7 @@ public class UIManager : IManager
     public RectTransform m_PlayPanel;
     public RectTransform m_PlayCardPanel;
     public RectTransform m_UnPlayCardPanel;
+    public RectTransform m_Player1CardPanel;
 
     private MenuManager m_MenuManager;
     private NetManager m_NetManager;
@@ -56,7 +57,7 @@ public class UIManager : IManager
     private bool StartGamepanelActive = false;
     private bool RegisterGamePanelActive = false;
     public bool isFirstPlayCard = true;//是否是第一下出牌
-
+    
     public static UIManager Instance //单例模式
     {
         get
@@ -249,6 +250,10 @@ public class UIManager : IManager
                     else if (child.gameObject.name == "UnPlayCardPanel")
                     {
                         m_UnPlayCardPanel = child.gameObject.GetComponent<RectTransform>();
+                    }
+                    else if(child.gameObject.name == "Player1CardPanel")
+                    {
+                        m_Player1CardPanel = child.gameObject.GetComponent<RectTransform>();
                     }
                 }
             }
@@ -448,11 +453,13 @@ public class UIManager : IManager
 
             if (isCanPlayCard) // 比较大于前一个手牌了,可以出牌
             {
-                HandManager.Instance.sendCardServer(HandManager.Instance.PlayCards); // 把手牌数据传到服务器
+                NetManager.Instance.syncUser();
+                HandManager.Instance.sendPlayerInfoServer(NetManager.Instance.playerInfo); // 把手牌数据传到服务器
                                                                                      //这里不知道要不要加一个发送座位信息
                 m_PlayPanel.gameObject.SetActive(false);
 
-                HandManager.Instance.RemovePlayCards();//出票时清除手牌
+                //HandManager.Instance.RemovePlayCards();//出牌时清除手牌
+                HandManager.Instance.PlayCardOnTable();
             }
             else
             {
