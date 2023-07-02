@@ -43,6 +43,6 @@ public class NetCode : MonoBehaviour
     public const int REQ_UNPLAY_CARD = 43;
     public const int RSP_UNPLAY_CARD = 44;
 
-    public const int REQ_RESTART = 45;
-    public const int RSP_RESTART = 46;
+    public const int REQ_SHOW_OTHER_CARD = 45;
+    public const int RSP_SHOW_OTHER_CARD = 46;
 }
